@@ -2,6 +2,7 @@
 import hashlib
 import json
 import time
+from urllib.parse import urlparse
 
 import requests
 
@@ -21,7 +22,7 @@ class RequestsClient(object):
     def __init__(self):
         self.access_id = access_id
         self.secret_key = secret_key
-        self.url = "https://api.coinex.com"
+        self.url = "https://api.coinex.com/v2"
         self.headers = self.HEADERS.copy()
 
     # Generate your signature string
@@ -35,16 +36,21 @@ class RequestsClient(object):
         headers["X-COINEX-KEY"] = self.access_id
         headers["X-COINEX-SIGN"] = signed_str
         headers["X-COINEX-TIMESTAMP"] = timestamp
+        headers["Content-Type"] = "application/json; charset=utf-8"
         return headers
 
-    def request(self, method, url, request_path, params={}, data=""):
-        timestamp = str(int(time.time() * 1000))
+    def request(self, method, url, params={}, data=""):
+        req = urlparse(url)
+        request_path = req.path
 
+        timestamp = str(int(time.time() * 1000))
         if method.upper() == "GET":
             # If params exist, query string needs to be added to the request path
             if params:
                 query_params = []
                 for item in params:
+                    if item is None:
+                        continue
                     query_params.append(item + "=" + str(params[item]))
                 query_string = "?{0}".format("&".join(query_params))
                 request_path = request_path + query_string
@@ -60,7 +66,7 @@ class RequestsClient(object):
 
         else:
             signed_str = self.gen_sign(
-                method, request_path, body="", timestamp=timestamp
+                method, request_path, body=data, timestamp=timestamp
             )
             response = requests.post(
                 url, data, headers=self.get_common_headers(signed_str, timestamp)
@@ -75,42 +81,39 @@ request_client = RequestsClient()
 
 
 def get_spot_market():
-    request_path = "/v2/spot/market"
+    request_path = "/spot/market"
     params = {"market": "BTCUSDT"}
     response = request_client.request(
         "GET",
         "{url}{request_path}".format(url=request_client.url, request_path=request_path),
-        request_path,
         params=params,
     )
     return response
 
 
 def get_spot_balance():
-    request_path = "/v2/assets/spot/balance"
+    request_path = "/assets/spot/balance"
     response = request_client.request(
         "GET",
         "{url}{request_path}".format(url=request_client.url, request_path=request_path),
-        request_path,
     )
     return response
 
 
 def get_deposit_address():
-    request_path = "/v2/assets/deposit-address"
+    request_path = "/assets/deposit-address"
     params = {"ccy": "USDT", "chain": "CSC"}
 
     response = request_client.request(
         "GET",
         "{url}{request_path}".format(url=request_client.url, request_path=request_path),
-        request_path,
         params=params,
     )
     return response
 
 
 def put_limit():
-    request_path = "/v2/spot/order"
+    request_path = "/spot/order"
     data = {
         "market": "BTCUSDT",
         "market_type": "SPOT",
@@ -125,7 +128,6 @@ def put_limit():
     response = request_client.request(
         "POST",
         "{url}{request_path}".format(url=request_client.url, request_path=request_path),
-        request_path,
         data=data,
     )
     return response
