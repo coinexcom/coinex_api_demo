@@ -49,7 +49,7 @@ class RequestsClient(object):
             if params:
                 query_params = []
                 for item in params:
-                    if item is None:
+                    if params[item] is None:
                         continue
                     query_params.append(item + "=" + str(params[item]))
                 query_string = "?{0}".format("&".join(query_params))
