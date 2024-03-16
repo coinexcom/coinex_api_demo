@@ -5,6 +5,7 @@ import websockets
 import json
 import time
 import hashlib
+import gzip
 
 WS_URL = ""  # Change "spot" to "futures" when interacting with WS ports
 access_id = ""  # Replace with your access id
@@ -36,6 +37,7 @@ async def auth(conn):
     }
     await conn.send(json.dumps(param))
     res = await conn.recv()
+    res = gzip.decompress(res)
     print("Authentication Result: ", json.loads(res))
 
 
@@ -47,6 +49,7 @@ async def subscribe_depth(conn):
     }
     await conn.send(json.dumps(param))
     res = await conn.recv()
+    res = gzip.decompress(res)
     print(json.loads(res))
 
 
@@ -54,6 +57,7 @@ async def subscribe_asset(conn):
     param = {"method": "balance.subscribe", "params": {"ccy_list": ["USDT"]}, "id": 1}
     await conn.send(json.dumps(param))
     res = await conn.recv()
+    res = gzip.decompress(res)
     print(json.loads(res))
 
 
@@ -71,6 +75,7 @@ async def main():
 
             while True:
                 res = await conn.recv()
+                res = gzip.decompress(res)
                 res = json.loads(res)
                 print(res)
     except Exception as e:
@@ -79,3 +84,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
