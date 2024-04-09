@@ -1,7 +1,8 @@
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Client, Method, Request, RequestBuilder};
 use serde::Deserialize;
-use sha2::{Digest, Sha256};
+use sha2::Sha256;
+use hmac::{Hmac, Mac};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::Debug;
@@ -82,8 +83,8 @@ impl CoinexHttpClient {
             &path_and_query,
             str::from_utf8(&body_bytes)?,
             now,
-        );
-        headers.insert("X-COINEX-SIGN", HeaderValue::from_str(&sign?).unwrap());
+        )?;
+        headers.insert("X-COINEX-SIGN", HeaderValue::from_str(&sign).unwrap());
 
         let request = Request::new(method, url);
         let request_builder = RequestBuilder::from_parts(self.client.clone(), request)
@@ -122,12 +123,13 @@ impl CoinexHttpClient {
         body: &str,
         timestamp: u128,
     ) -> Result<String, Box<dyn Error>> {
-        let prepared_str = format!(
-            "{}{}{}{}{}",
-            method, path, body, timestamp, self.coinex_secret
-        );
-        let hash = Sha256::digest(prepared_str.as_bytes());
-        Ok(hex::encode(hash))
+        let prepared_str = format!("{}{}{}{}", method, path, body, timestamp);
+        type HmacSha256 = Hmac<Sha256>;
+
+        let mut mac = HmacSha256::new_from_slice(self.coinex_secret.as_bytes())?;
+        mac.update(prepared_str.as_bytes());
+        let result = mac.finalize().into_bytes();
+        Ok(hex::encode(&result))
     }
 
     async fn get(

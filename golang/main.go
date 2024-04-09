@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -117,9 +118,16 @@ func (c *coinexHTTPClient) request(method, path string, params url.Values, body 
 }
 
 func (c *coinexHTTPClient) sign(method, path string, body string, timestamp int) string {
-	preparedStr := method + path + body + strconv.Itoa(timestamp) + c.coinexSecret
-	hash := sha256.Sum256([]byte(preparedStr))
-	return strings.ToLower(hex.EncodeToString(hash[:]))
+	preparedStr := method + path + body + strconv.Itoa(timestamp)
+	hash := c.hmacSha256(preparedStr, c.coinexSecret)
+	return strings.ToLower(hex.EncodeToString(hash))
+}
+
+func (c *coinexHTTPClient) hmacSha256(text, secret string) []byte {
+	hmacIns := hmac.New(sha256.New, []byte(secret))
+	// compute the HMAC
+	hmacIns.Write([]byte(text))
+	return hmacIns.Sum(nil)
 }
 
 func (c *coinexHTTPClient) GET(path string, params url.Values) ([]byte, error) {

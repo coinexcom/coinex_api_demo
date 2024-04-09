@@ -6,6 +6,7 @@ import json
 import time
 import hashlib
 import gzip
+import hmac
 
 WS_URL = ""  # Change "spot" to "futures" when interacting with WS ports
 access_id = ""  # Replace with your access id
@@ -23,8 +24,16 @@ async def auth(conn):
     timestamp = int(time.time() * 1000)
 
     # Generate your signature string
-    prepared_str = f"{timestamp}{secret_key}"
-    signed_str = hashlib.sha256(prepared_str.encode("utf-8")).hexdigest().lower()
+    prepared_str = f"{timestamp}"
+    signed_str = (
+        hmac.new(
+            bytes(secret_key, "latin-1"),
+            msg=bytes(prepared_str, "latin-1"),
+            digestmod=hashlib.sha256,
+        )
+        .hexdigest()
+        .lower()
+    )
 
     param = {
         "method": "server.sign",
@@ -84,4 +93,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
