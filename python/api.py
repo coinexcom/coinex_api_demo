@@ -2,6 +2,7 @@
 import hashlib
 import json
 import time
+import hmac
 from urllib.parse import urlparse
 
 import requests
@@ -27,9 +28,13 @@ class RequestsClient(object):
 
     # Generate your signature string
     def gen_sign(self, method, request_path, body, timestamp):
-        prepared_str = f"{method}{request_path}{body}{timestamp}{self.secret_key}"
-        signed_str = hashlib.sha256(prepared_str.encode("utf-8")).hexdigest().lower()
-        return signed_str
+        prepared_str = f"{method}{request_path}{body}{timestamp}"
+        signature = hmac.new(
+            bytes(self.secret_key, 'latin-1'), 
+            msg=bytes(prepared_str, 'latin-1'), 
+            digestmod=hashlib.sha256
+        ).hexdigest().lower()
+        return signature
 
     def get_common_headers(self, signed_str, timestamp):
         headers = self.HEADERS.copy()
