@@ -113,15 +113,12 @@ class websocketTest(object):
         self.depth_subscribe()
 
     def start(self):
-        websocket.enableTrace(False)  # 开启运行状态追踪。debug 的时候最好打开他，便于追踪定位问题。
-
+        websocket.enableTrace(False)
         self.ws = WebSocketApp(self.url,
                                on_open=self.on_open,
                                on_message=self.on_message,
                                on_error=self.on_error,
                                on_close=self.on_close)
-        # self.ws.on_open = self.on_open  # 也可以先创建对象再这样指定回调函数。run_forever 之前指定回调函数即可。
-
         self.ws.run_forever()
 
 
