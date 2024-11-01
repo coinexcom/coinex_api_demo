@@ -3,7 +3,7 @@ import hashlib
 import json
 import time
 import hmac
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode
 
 import requests
 
@@ -52,13 +52,11 @@ class RequestsClient(object):
         if method.upper() == "GET":
             # If params exist, query string needs to be added to the request path
             if params:
-                query_params = []
                 for item in params:
                     if params[item] is None:
+                        del params[item]
                         continue
-                    query_params.append(item + "=" + str(params[item]))
-                query_string = "?{0}".format("&".join(query_params))
-                request_path = request_path + query_string
+                request_path = request_path + "?" + urlencode(params)
 
             signed_str = self.gen_sign(
                 method, request_path, body="", timestamp=timestamp
