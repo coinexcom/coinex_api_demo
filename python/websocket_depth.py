@@ -5,6 +5,7 @@ from websocket import WebSocketApp
 import json
 import gzip
 import zlib
+import decimal
 
 
 URL = "wss://socket.coinex.com/v2/spot"
@@ -29,8 +30,8 @@ class websocketTest(object):
                 order_dict[item[0]] = item[1]
 
     def depth_checksum(self):
-        asks = sorted(self.order_asks.items(), key=lambda s:s[0], reverse=False)
-        bids = sorted(self.order_bids.items(), key=lambda s:s[0], reverse=True)
+        asks = sorted(self.order_asks.items(), key=lambda s:decimal.Decimal(s[0]), reverse=False)
+        bids = sorted(self.order_bids.items(), key=lambda s:decimal.Decimal(s[0]), reverse=True)
 
         check_sum_str = ""
         for item in bids:
