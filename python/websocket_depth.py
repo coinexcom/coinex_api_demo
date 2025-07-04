@@ -7,7 +7,6 @@ import gzip
 import zlib
 import decimal
 
-
 URL = "wss://socket.coinex.com/v2/spot"
 # URL = "wss://socket.coinex.com/v2/futures"
 
