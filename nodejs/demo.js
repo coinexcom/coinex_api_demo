@@ -4,13 +4,13 @@ const SECRET_KEY = ""; // your secret key
 
 const crypto = require("crypto");
 function createAuthorization(method, request_path, body_json, timestamp) {
-    var text = method + request_path + body_json + timestamp + SECRET_KEY;
+    var text = method + request_path + body_json + timestamp;
     console.log(text);
     return crypto
-        .createHash("sha256")
+        .createHmac("sha256", SECRET_KEY)
         .update(text)
         .digest("hex")
-        .toUpperCase();
+        .toLowerCase();
 }
 
 const Axios = require("axios");
